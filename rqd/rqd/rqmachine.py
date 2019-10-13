@@ -364,7 +364,13 @@ class Machine:
     def getPathEnv(self):
         """Returns the correct path environment for the given machine"""
         if platform.system() == 'Linux':
-            return '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+            return os.environ['PATH']
+        return ''
+
+    @rqutil.Memoize
+    def getPythonPath(self):
+        if os.environ.get("PYTHONPATH"):
+            return os.environ.get("PYTHONPATH")
         return ''
 
     @rqutil.Memoize
