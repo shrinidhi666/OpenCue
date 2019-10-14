@@ -104,7 +104,7 @@ def permissionsUser(uid, gid):
     __becomeRoot()
     try:
         username = pwd.getpwuid(uid).pw_name
-        groups = [20] + [g.gr_gid for g in grp.getgrall() if username in g.gr_mem]
+        groups = [rqconstants.LAUNCH_FRAME_USER_GID] + [g.gr_gid for g in grp.getgrall() if username in g.gr_mem]
         os.setgroups(groups)
     except Exception:
         pass

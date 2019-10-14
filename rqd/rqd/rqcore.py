@@ -245,11 +245,11 @@ class FrameAttendantThread(threading.Thread):
         self._tempLocations.append(tempStatFile)
         tempCommand = []
         if self.rqCore.machine.isDesktop():
-            tempCommand += ["/bin/nice"]
-        tempCommand += ["/usr/bin/time", "-p", "-o", tempStatFile]
+            tempCommand += [rqconstants.PATH_NICE_CMD]
+        tempCommand += [rqconstants.PATH_TIME_CMD, "-p", "-o", tempStatFile]
 
         if 'CPU_LIST' in runFrame.attributes:
-            tempCommand += ['taskset', '-c', runFrame.attributes['CPU_LIST']]
+            tempCommand += [rqconstants.PATH_TASKSET_CMD, '-c', runFrame.attributes['CPU_LIST']]
 
         rqutil.permissionsHigh()
         try:
@@ -422,7 +422,7 @@ class FrameAttendantThread(threading.Thread):
 
             try: # Exception block for all exceptions
                 # Do everything as launching user
-                runFrame.gid = rqconstants.LAUNCH_FRAME_USER_GID
+                # runFrame.gid = rqconstants.LAUNCH_FRAME_USER_GID
 
                 # Change to job user
                 rqutil.permissionsUser(runFrame.uid, runFrame.gid)

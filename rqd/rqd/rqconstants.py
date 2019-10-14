@@ -18,7 +18,6 @@ Constants.
 """
 
 
-import commands
 import logging
 import os
 import platform
@@ -54,7 +53,7 @@ RQD_MIN_PING_INTERVAL_SEC = 5
 RQD_MAX_PING_INTERVAL_SEC = 30
 MAX_LOG_FILES = 15
 CORE_VALUE = 100
-LAUNCH_FRAME_USER_GID = 20
+LAUNCH_FRAME_USER_GID = None
 RQD_RETRY_STARTUP_CONNECT_DELAY = 30
 RQD_RETRY_CRITICAL_REPORT_DELAY = 30
 RQD_USE_IP_AS_HOSTNAME = True
@@ -90,7 +89,11 @@ PATH_STAT = "/proc/stat"
 PATH_MEMINFO = "/proc/meminfo"
 
 if platform.system() == 'Linux':
+    PATH_NICE_CMD = subprocess.check_output("which nice",shell=True)[:-1]
+    PATH_TIME_CMD = subprocess.check_output("which time",shell=True)[:-1]
+    PATH_TASKSET_CMD = subprocess.check_output("which taskset", shell=True)[:-1]
     SYS_HERTZ = os.sysconf('SC_CLK_TCK')
+
 
 CONFIG_FILE = '/etc/opencue/rqd.conf'
 if '-c' in sys.argv:
@@ -105,10 +108,11 @@ ALLOW_GPU = False
 ALLOW_PLAYBLAST = False
 LOAD_MODIFIER = 0 # amount to add/subtract from load
 
-if commands.getoutput('/bin/su --help').find('session-command') != -1:
-    SU_ARGUEMENT = '--session-command'
-else:
-    SU_ARGUEMENT = '-c'
+if(platform.system() != 'Linux'):
+    if subprocess.check_output('/bin/su --help',shell=True).find('session-command') != -1:
+        SU_ARGUEMENT = '--session-command'
+    else:
+        SU_ARGUEMENT = '-c'
 
 SP_OS = FACILITY = ''
 proc = None
@@ -140,9 +144,6 @@ if len(FACILITY) != 3 or not re.match('^[A-Za-z0-9]*$', FACILITY):
         logging.warning('FACILITY value of %s is out of allowed range' % FACILITY)
     FACILITY = DEFAULT_FACILITY
 
-# maa is small so decrease the ping in interval
-if FACILITY == 'maa':
-    RQD_MAX_PING_INTERVAL_SEC = 30
 
 try:
     if os.path.isfile(CONFIG_FILE):
@@ -173,6 +174,9 @@ try:
             DEFAULT_FACILITY = config.get(__section, "DEFAULT_FACILITY")
         if config.has_option(__section, "LAUNCH_FRAME_USER_GID"):
             LAUNCH_FRAME_USER_GID = config.getint(__section, "LAUNCH_FRAME_USER_GID")
+        if config.has_option(__section, "LAUNCH_FRAME_USER_UID"):
+            LAUNCH_FRAME_USER_GID = config.getint(__section, "LAUNCH_FRAME_USER_UID")
+
 except Exception, e:
     logging.warning("Failed to read values from config file %s due to %s at %s" % (CONFIG_FILE, e, traceback.extract_tb(sys.exc_info()[2])))
 
