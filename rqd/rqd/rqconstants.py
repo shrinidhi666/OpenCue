@@ -28,6 +28,7 @@ import traceback
 
 if platform.system() == 'Linux':
     import pwd
+    import grp
 
 # NOTE: Some of these values can be overridden by CONFIG_FILE; see below.
 
@@ -114,35 +115,11 @@ if(platform.system() != 'Linux'):
     else:
         SU_ARGUEMENT = '-c'
 
-SP_OS = FACILITY = ''
-proc = None
-# Try to read facility and os from studio environment
-if os.path.isfile('/usr/local/stdenv/.cshrc'):
-    proc = subprocess.Popen(
-        "csh -c 'unsetenv SP_PATH ; setenv CONSOLE 1 ; setenv HOME / ;"
-        " source /usr/local/stdenv/.cshrc ; echo $SP_OS $FACILITY'",
-        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-elif os.path.isfile('/etc/csh.cshrc'):
-    # For maa on centos
-    proc = subprocess.Popen("csh -c 'source /etc/csh.cshrc ; echo $SP_OS $FACILITY'",
-                            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+#Should always read from the system
+SP_OS = platform.system()
 
-# If we have a popen process and it has successfully been run,
-# get os and facility from result.
-if proc:
-    out, err = proc.communicate()
-    if proc.returncode == 0:
-        SP_OS, FACILITY = out.split()[-2:]
-
-if not 3 <= len(SP_OS) <= 10 or not re.match('^[A-Za-z0-9]*$', SP_OS):
-    if SP_OS:
-        logging.warning('SP_OS value of %s is out of allowed range' % SP_OS)
-    SP_OS = platform.system()
-
-if len(FACILITY) != 3 or not re.match('^[A-Za-z0-9]*$', FACILITY):
-    if FACILITY:
-        logging.warning('FACILITY value of %s is out of allowed range' % FACILITY)
-    FACILITY = DEFAULT_FACILITY
+#Should always read from the os.environ to be safe also . some multifacility studios use 'LOCATION'  env
+FACILITY = os.environ.get('FACILITY') or os.environ.get('LOCATION') or DEFAULT_FACILITY
 
 
 try:
@@ -172,10 +149,12 @@ try:
             RQD_USE_IP_AS_HOSTNAME = config.getboolean(__section, "RQD_USE_IP_AS_HOSTNAME")
         if config.has_option(__section, "DEFAULT_FACILITY"):
             DEFAULT_FACILITY = config.get(__section, "DEFAULT_FACILITY")
-        if config.has_option(__section, "LAUNCH_FRAME_USER_GID"):
-            LAUNCH_FRAME_USER_GID = config.getint(__section, "LAUNCH_FRAME_USER_GID")
-        if config.has_option(__section, "LAUNCH_FRAME_USER_UID"):
-            LAUNCH_FRAME_USER_GID = config.getint(__section, "LAUNCH_FRAME_USER_UID")
+        if config.has_option(__section, "LAUNCH_FRAME_USER_GROUP") and SP_OS == 'Linux':
+            LAUNCH_FRAME_USER_GID = config.get(__section, "LAUNCH_FRAME_USER_GROUP")
+        if config.has_option(__section, "LAUNCH_RQD_USER_GROUP"):
+            LAUNCH_RQD_USER_GID = config.get(__section, "LAUNCH_RQD_USER_GROUP")
+        if config.has_option(__section, "LAUNCH_RQD_USER_USER"):
+            LAUNCH_RQD_USER_UID = config.get(__section, "LAUNCH_RQD_USER_USER")
 
 except Exception, e:
     logging.warning("Failed to read values from config file %s due to %s at %s" % (CONFIG_FILE, e, traceback.extract_tb(sys.exc_info()[2])))
