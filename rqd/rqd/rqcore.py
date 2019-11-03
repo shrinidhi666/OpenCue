@@ -217,7 +217,8 @@ class FrameAttendantThread(threading.Thread):
             for location in self._tempLocations:
                 if os.path.isfile(location):
                     try:
-                        os.remove(location)
+                        # os.remove(location)
+                        log.debug("removing : "+ str(location))
                     except Exception, e:
                         log.warning("Unable to delete file: %s due to %s at %s" % (
                             location, e, traceback.extract_tb(sys.exc_info()[2])))
