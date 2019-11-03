@@ -117,9 +117,12 @@ class FrameAttendantThread(threading.Thread):
                                            'rqd-cmd-%s-%s' % (self.runFrame.frame_id, time.time()))
             rqexe = open(commandFile, "w")
             self._tempLocations.append(commandFile)
+            log.debug("cmd written : "+ str(command))
             rqexe.write(command)
             rqexe.close()
             os.chmod(commandFile, 0777)
+            if not os.path.exists(commandFile):
+                log.critical("commandFile not written : "+ str(commandFile))
             return commandFile
         except Exception, e:
             log.critical("Unable to make command file: %s due to %s at %s" % (
