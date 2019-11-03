@@ -73,6 +73,8 @@ def permissionsHigh():
     """Sets the effective gid/uid to processes original values (root)"""
     if platform.system() == "Windows":
         return
+    if os.getuid() != 0:
+        return
     PERMISSIONS.acquire()
     os.setegid(os.getgid())
     os.seteuid(os.getuid())
@@ -87,6 +89,8 @@ def permissionsLow():
        RQD_GID and RQD_UID"""
     if platform.system() == 'Windows':
         return
+    if os.getuid() != 0:
+        return
     if os.getegid() != rqconstants.RQD_GID or os.getegid() != rqconstants.RQD_GID:
         __becomeRoot()
         os.setegid(rqconstants.RQD_GID)
@@ -99,6 +103,8 @@ def permissionsLow():
 def permissionsUser(uid, gid):
     """Sets the effective gid/uid to supplied values"""
     if platform.system() == 'Windows':
+        return
+    if os.getuid() != 0:
         return
     PERMISSIONS.acquire()
     __becomeRoot()
@@ -132,6 +138,8 @@ def __becomeRoot():
 def checkAndCreateUser(username):
     """Check to see if the provided user exists, if not attempt to create it."""
     # TODO(gregdenton): Add Windows and Mac support here. (Issue #61)
+    if os.getuid() != 0:
+        return
     try:
         pwd.getpwnam(username)
         return

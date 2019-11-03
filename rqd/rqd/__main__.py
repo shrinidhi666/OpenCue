@@ -131,8 +131,8 @@ def usage():
 
 def main():
     if platform.system() == 'Linux' and os.getuid() != 0:
-        log.critical("Please run launch as root")
-        sys.exit(1)
+        log.critical("Please launch as root if you want user level control")
+        # sys.exit(1)
 
     try:
         opts, argv = getopt.getopt(sys.argv[1:], 'hdc:', ['help',
@@ -158,8 +158,9 @@ def main():
 
     log.warning('RQD Starting Up')
 
-    if rqconstants.FACILITY in ('abq'):
-        os.environ['TZ'] = 'PST8PDT'
+    # do we need Sony Image Works hardcoded fixes?
+    # if rqconstants.FACILITY in ('abq'):
+    #     os.environ['TZ'] = 'PST8PDT'
 
     rqd = RqCore(optNimbyOff)
     rqd.start()

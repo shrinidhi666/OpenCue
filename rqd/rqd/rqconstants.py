@@ -62,8 +62,13 @@ RQD_CREATE_USER_IF_NOT_EXISTS = True
 
 KILL_SIGNAL = 9
 if platform.system() == 'Linux':
-    RQD_UID = pwd.getpwnam("daemon")[2]
-    RQD_GID = pwd.getpwnam("daemon")[3]
+    if os.getuid() == 0:
+        RQD_UID = pwd.getpwnam("daemon")[2]
+        RQD_GID = pwd.getpwnam("daemon")[3]
+    else:
+        RQD_UID = os.getuid()
+        RQD_GID = os.getgid()
+
 else:
     RQD_UID = 0
     RQD_GID = 0
@@ -150,11 +155,8 @@ try:
         if config.has_option(__section, "DEFAULT_FACILITY"):
             DEFAULT_FACILITY = config.get(__section, "DEFAULT_FACILITY")
         if config.has_option(__section, "LAUNCH_FRAME_USER_GROUP") and SP_OS == 'Linux':
-            LAUNCH_FRAME_USER_GID = config.get(__section, "LAUNCH_FRAME_USER_GROUP")
-        if config.has_option(__section, "LAUNCH_RQD_USER_GROUP"):
-            LAUNCH_RQD_USER_GID = config.get(__section, "LAUNCH_RQD_USER_GROUP")
-        if config.has_option(__section, "LAUNCH_RQD_USER_USER"):
-            LAUNCH_RQD_USER_UID = config.get(__section, "LAUNCH_RQD_USER_USER")
+            LAUNCH_FRAME_USER_GID = grp.getgrnam(config.get(__section, "LAUNCH_FRAME_USER_GROUP")).gr_gid
+
 
 except Exception, e:
     logging.warning("Failed to read values from config file %s due to %s at %s" % (CONFIG_FILE, e, traceback.extract_tb(sys.exc_info()[2])))
