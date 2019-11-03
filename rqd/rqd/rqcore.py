@@ -260,24 +260,20 @@ class FrameAttendantThread(threading.Thread):
             if os.getuid() != 0:
                 tempCommand += ['"' + self._createCommandFile(runFrame.command) + '"']
                 log.debug("tempCommand : "+ str(tempCommand))
-                frameInfo.forkedCommand = subprocess.Popen(tempCommand,
-                                                           env=self.frameEnv,
-                                                           cwd=self.rqCore.machine.getTempPath(),
-                                                           stdin=subprocess.PIPE,
-                                                           stdout=self.rqlog,
-                                                           stderr=self.rqlog,
-                                                           close_fds=True)
             else:
                 tempCommand += ["/bin/su", runFrame.user_name, rqconstants.SU_ARGUEMENT,
                                 '"' + self._createCommandFile(runFrame.command) + '"']
-                frameInfo.forkedCommand = subprocess.Popen(tempCommand,
-                                                           env=self.frameEnv,
-                                                           cwd=self.rqCore.machine.getTempPath(),
-                                                           stdin=subprocess.PIPE,
-                                                           stdout=self.rqlog,
-                                                           stderr=self.rqlog,
-                                                           close_fds=True,
-                                                           preexec_fn=os.setsid)
+
+            frameInfo.forkedCommand = subprocess.Popen(tempCommand,
+                                                       env=self.frameEnv,
+                                                       cwd=self.rqCore.machine.getTempPath(),
+                                                       stdin=subprocess.PIPE,
+                                                       stdout=self.rqlog,
+                                                       stderr=self.rqlog,
+                                                       close_fds=True,
+                                                       preexec_fn=os.setsid)
+        except:
+            log.critical(str(sys.exc_info()))
 
             # Actual cwd is set by /shots/SHOW/home/perl/etc/qwrap.cuerun
         finally:
