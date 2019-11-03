@@ -265,13 +265,14 @@ class FrameAttendantThread(threading.Thread):
                 tempCommand += ["/bin/su", runFrame.user_name, rqconstants.SU_ARGUEMENT,
                                 '"' + self._createCommandFile(runFrame.command) + '"']
 
-            frameInfo.forkedCommand = subprocess.Popen(tempCommand,
+            frameInfo.forkedCommand = subprocess.Popen(" ".join(tempCommand),
                                                        env=self.frameEnv,
                                                        cwd=self.rqCore.machine.getTempPath(),
                                                        stdin=subprocess.PIPE,
                                                        stdout=self.rqlog,
                                                        stderr=self.rqlog,
                                                        close_fds=True,
+                                                       shell=True,
                                                        preexec_fn=os.setsid)
         except:
             log.critical(str(sys.exc_info()))
