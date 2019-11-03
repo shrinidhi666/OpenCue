@@ -259,6 +259,7 @@ class FrameAttendantThread(threading.Thread):
         try:
             if os.getuid() != 0:
                 tempCommand += ['"' + self._createCommandFile(runFrame.command) + '"']
+                log.debug("tempCommand : "+ str(tempCommand))
                 frameInfo.forkedCommand = subprocess.Popen(tempCommand,
                                                            env=self.frameEnv,
                                                            cwd=self.rqCore.machine.getTempPath(),
