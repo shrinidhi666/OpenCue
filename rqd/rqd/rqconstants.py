@@ -59,6 +59,7 @@ RQD_RETRY_STARTUP_CONNECT_DELAY = 30
 RQD_RETRY_CRITICAL_REPORT_DELAY = 30
 RQD_USE_IP_AS_HOSTNAME = True
 RQD_CREATE_USER_IF_NOT_EXISTS = True
+USE_SHELL = False
 
 KILL_SIGNAL = 9
 if platform.system() == 'Linux':
@@ -156,6 +157,8 @@ try:
             DEFAULT_FACILITY = config.get(__section, "DEFAULT_FACILITY")
         if config.has_option(__section, "LAUNCH_FRAME_USER_GROUP") and SP_OS == 'Linux':
             LAUNCH_FRAME_USER_GID = grp.getgrnam(config.get(__section, "LAUNCH_FRAME_USER_GROUP")).gr_gid
+        if config.has_option(__section, "USE_SHELL"):
+            DEFAULT_FACILITY = config.get(__section, "USE_SHELL")
 
 
 except Exception, e:

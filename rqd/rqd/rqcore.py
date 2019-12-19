@@ -272,7 +272,7 @@ class FrameAttendantThread(threading.Thread):
                                                        stdout=self.rqlog,
                                                        stderr=self.rqlog,
                                                        close_fds=True,
-                                                       shell=True,
+                                                       shell=rqconstants.USE_SHELL,
                                                        preexec_fn=os.setsid)
         except:
             log.critical(str(sys.exc_info()))
