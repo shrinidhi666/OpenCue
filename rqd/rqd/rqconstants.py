@@ -18,6 +18,16 @@ Constants.
 """
 
 
+<<<<<<< HEAD
+=======
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+
+from future import standard_library
+standard_library.install_aliases()
+import subprocess
+>>>>>>> eaef93de1c492f9692cb6019650f2cbc2b588099
 import logging
 import os
 import platform
@@ -45,7 +55,9 @@ DEFAULT_FACILITY = 'cloud'
 # GRPC VALUES
 RQD_GRPC_MAX_WORKERS = 10
 RQD_GRPC_PORT = 8444
-RQD_GRPC_SLEEP = 60 * 60 * 24
+RQD_GRPC_SLEEP_SEC = 60 * 60 * 24
+RQD_GRPC_CONNECTION_ATTEMPT_SLEEP_SEC = 15
+RQD_GRPC_RETRY_CONNECTION = True
 CUEBOT_GRPC_PORT = 8443
 
 # RQD behavior:
@@ -128,12 +140,46 @@ SP_OS = platform.system()
 FACILITY = os.environ.get('FACILITY') or os.environ.get('LOCATION') or DEFAULT_FACILITY
 
 
+SP_OS = FACILITY = ''
+proc = None
+# Try to read facility and os from studio environment
+if os.path.isfile('/usr/local/stdenv/.cshrc'):
+    proc = subprocess.Popen(
+        "csh -c 'unsetenv SP_PATH ; setenv CONSOLE 1 ; setenv HOME / ;"
+        " source /usr/local/stdenv/.cshrc ; echo $SP_OS $FACILITY'",
+        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+elif os.path.isfile('/etc/csh.cshrc'):
+    # For maa on centos
+    proc = subprocess.Popen("csh -c 'source /etc/csh.cshrc ; echo $SP_OS $FACILITY'",
+                            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+# If we have a popen process and it has successfully been run,
+# get os and facility from result.
+if proc:
+    out, err = proc.communicate()
+    if proc.returncode == 0:
+        SP_OS, FACILITY = out.split()[-2:]
+
+if not 3 <= len(SP_OS) <= 10 or not re.match('^[A-Za-z0-9]*$', SP_OS):
+    if SP_OS:
+        logging.warning('SP_OS value of %s is out of allowed range' % SP_OS)
+    SP_OS = platform.system()
+
+if len(FACILITY) != 3 or not re.match('^[A-Za-z0-9]*$', FACILITY):
+    if FACILITY:
+        logging.warning('FACILITY value of %s is out of allowed range' % FACILITY)
+    FACILITY = DEFAULT_FACILITY
+
+# maa is small so decrease the ping in interval
+if FACILITY == 'maa':
+    RQD_MAX_PING_INTERVAL_SEC = 30
+
 try:
     if os.path.isfile(CONFIG_FILE):
         # Hostname can come from here: rqutil.getHostname()
         __section = "Override"
-        import ConfigParser
-        config = ConfigParser.RawConfigParser()
+        import configparser
+        config = configparser.RawConfigParser()
         config.read(CONFIG_FILE)
         if config.has_option(__section, "OVERRIDE_CORES"):
             OVERRIDE_CORES = config.getint(__section, "OVERRIDE_CORES")
@@ -161,6 +207,6 @@ try:
             DEFAULT_FACILITY = config.get(__section, "USE_SHELL")
 
 
-except Exception, e:
+except Exception as e:
     logging.warning("Failed to read values from config file %s due to %s at %s" % (CONFIG_FILE, e, traceback.extract_tb(sys.exc_info()[2])))
 
